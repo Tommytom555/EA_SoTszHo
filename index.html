@@ -1,0 +1,3265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Midnight Home - Survive Until Dawn</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nosifer&family=Special+Elite&family=Creepster&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --blood-red: #8B0000;
+            --ghost-white: #F8F8FF;
+            --shadow-black: #0a0a0a;
+            --eerie-glow: #3a1a1a;
+            --warning-amber: #FF6B00;
+            --safe-green: #2d5a27;
+            --power-blue: #1a3a5c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Special Elite', 'Noto Sans SC', monospace;
+            background: var(--shadow-black);
+            color: var(--ghost-white);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        body[data-lang="zh"] {
+            font-family: 'Noto Sans SC', 'Special Elite', sans-serif;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; }
+            41% { opacity: 1; }
+            42% { opacity: 0.8; }
+            43% { opacity: 1; }
+            45% { opacity: 0.3; }
+            46% { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes scanline {
+            0% { top: -100%; }
+            100% { top: 100%; }
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.02); filter: brightness(1.1); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes ghostFloat {
+            0%, 100% { transform: translateY(0) scale(1); opacity: 0.9; }
+            50% { transform: translateY(-10px) scale(1.02); opacity: 1; }
+        }
+
+
+        .game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Language Toggle */
+        .lang-toggle {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 111;
+            display: flex;
+            gap: 8px;
+        }
+
+        .lang-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(20, 10, 10, 0.95);
+            border: 2px solid var(--blood-red);
+            color: var(--ghost-white);
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover, .lang-btn.active {
+            background: var(--blood-red);
+            box-shadow: 0 0 15px var(--blood-red);
+        }
+
+        /* On game screen, move language toggle to bottom left to avoid overlap */
+        #game-screen .lang-toggle,
+        .game-container:has(#game-screen[style*="block"]) .lang-toggle {
+            bottom: 15px;
+            left: 15px;
+            right: auto;
+        }
+
+        /* Main Menu */
+        #main-menu {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, #000 0%, #1a0a0a 50%, #0a0505 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        #main-menu::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url('https://pfst.cf2.poecdn.net/base/image/896fd04d5bccdeddc2810a91a58f88fc1fbc9b90ddbaf88e9463b2ea68bc8f90?w=1024&h=1536') center/cover;
+            opacity: 0.15;
+            filter: grayscale(50%);
+        }
+
+        .menu-title {
+            font-family: 'Nosifer', cursive;
+            font-size: clamp(2rem, 8vw, 5rem);
+            color: var(--blood-red);
+            text-shadow: 0 0 20px var(--blood-red), 0 0 40px var(--blood-red), 0 0 60px #000;
+            animation: flicker 3s infinite, pulse 4s ease-in-out infinite;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-subtitle {
+            font-family: 'Creepster', 'Noto Sans SC', cursive;
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: var(--ghost-white);
+            opacity: 0.7;
+            letter-spacing: 0.3em;
+            margin-bottom: 3rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-btn {
+            font-family: 'Special Elite', 'Noto Sans SC', monospace;
+            font-size: clamp(1.2rem, 3vw, 1.6rem);
+            padding: 1.3rem 4rem;
+            margin: 0.7rem;
+            background: linear-gradient(180deg, #2a1a1a 0%, #1a0a0a 100%);
+            border: 3px solid var(--blood-red);
+            color: var(--ghost-white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            min-width: 280px;
+        }
+
+        .menu-btn:hover {
+            background: var(--blood-red);
+            box-shadow: 0 0 40px var(--blood-red), 0 0 80px rgba(139, 0, 0, 0.5);
+            transform: scale(1.08);
+        }
+
+        /* Game Screen */
+        #game-screen {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: var(--shadow-black);
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 50;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .hud-left, .hud-right, .hud-center {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .hud-center {
+            align-items: center;
+        }
+
+        .time-display {
+            font-family: 'Nosifer', cursive;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            color: var(--blood-red);
+            text-shadow: 0 0 10px var(--blood-red);
+        }
+
+        .time-display.dawn {
+            color: #FFD700;
+            text-shadow: 0 0 20px #FFD700;
+        }
+
+        .stat-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: clamp(0.7rem, 2vw, 0.9rem);
+        }
+
+        .stat-bar-fill {
+            width: clamp(60px, 15vw, 120px);
+            height: 12px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .stat-bar-inner {
+            height: 100%;
+            transition: width 0.5s ease, background 0.3s ease;
+        }
+
+        .power-bar { background: linear-gradient(90deg, #1a5a8a, #3a9aff); }
+        .sanity-bar { background: linear-gradient(90deg, #5a1a5a, #aa3aaa); }
+        .health-bar { background: linear-gradient(90deg, #5a1a1a, #aa3a3a); }
+
+        .stat-bar-inner.low {
+            animation: pulse 1s infinite;
+        }
+
+        .stat-label {
+            min-width: 50px;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* Room View */
+        .room-view {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .room-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.5s ease;
+        }
+
+        .room-view.dark .room-image {
+            filter: brightness(0.3);
+        }
+
+        .room-view.flashlight .room-image {
+            filter: brightness(0.8);
+        }
+
+        /* Flashlight overlay */
+        .flashlight-overlay {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle 150px at var(--x, 50%) var(--y, 50%),
+                transparent 0%,
+                rgba(0,0,0,0.3) 30%,
+                rgba(0,0,0,0.8) 60%,
+                rgba(0,0,0,0.95) 100%);
+            pointer-events: none;
+            display: none;
+        }
+
+        .room-view.flashlight .flashlight-overlay {
+            display: block;
+        }
+
+        /* Room toys */
+        .room-toy {
+            position: absolute;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 15;
+        }
+
+        .room-toy img {
+            max-height: 150px;
+            object-fit: contain;
+            filter: brightness(0.8);
+            transition: all 0.5s ease;
+        }
+
+        .room-toy.possessed img {
+            filter: brightness(0.4) saturate(0.3) contrast(1.2);
+            animation: shake 0.1s infinite;
+        }
+
+        /* Possessed toy - creepy visual effects with BIG RED GLOW */
+        .room-toy.possessed img {
+            filter: brightness(0.4) contrast(1.3) saturate(0.3);
+            animation: possessedShake 0.1s infinite;
+        }
+
+        @keyframes possessedShake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-2px, 1px); }
+            50% { transform: translate(1px, -1px); }
+            75% { transform: translate(-1px, -1px); }
+        }
+
+        /* LARGE RED GLOW covering the face/eye area */
+        .room-toy.possessed::before {
+            content: '';
+            position: absolute;
+            top: 5%;
+            left: 15%;
+            width: 70%;
+            height: 50%;
+            background: radial-gradient(ellipse at center,
+                rgba(255, 0, 0, 1) 0%,
+                rgba(255, 0, 0, 0.9) 15%,
+                rgba(255, 50, 0, 0.7) 30%,
+                rgba(200, 0, 0, 0.5) 50%,
+                rgba(139, 0, 0, 0.3) 70%,
+                transparent 90%);
+            animation: bigRedGlow 0.8s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 20;
+            filter: blur(8px);
+        }
+
+        @keyframes bigRedGlow {
+            0%, 100% {
+                opacity: 0.9;
+                transform: scale(1);
+                filter: blur(8px) brightness(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+                filter: blur(12px) brightness(1.5);
+            }
+        }
+
+        /* Dark aura surrounding the toy */
+        .room-toy.possessed::after {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -20%;
+            width: 140%;
+            height: 140%;
+            background: radial-gradient(ellipse at center,
+                transparent 30%,
+                rgba(50, 0, 0, 0.4) 50%,
+                rgba(20, 0, 0, 0.6) 70%,
+                rgba(0, 0, 0, 0.8) 90%);
+            animation: darkAuraPulse 1.5s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 14;
+        }
+
+        @keyframes darkAuraPulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        /* Demonic overlay with intense red eye spots */
+        .demonic-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 21;
+            transition: opacity 0.3s ease;
+        }
+
+        .room-toy.possessed .demonic-overlay {
+            opacity: 1;
+        }
+
+        /* Two big glowing red spots for eyes */
+        .room-toy.possessed .demonic-overlay::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 20%;
+            width: 25%;
+            height: 20%;
+            background: radial-gradient(ellipse at center,
+                #ffffff 0%,
+                #ff0000 20%,
+                #ff0000 40%,
+                rgba(255, 0, 0, 0.8) 60%,
+                transparent 80%);
+            border-radius: 50%;
+            animation: eyeSpotGlow 0.5s ease-in-out infinite alternate;
+            filter: blur(3px);
+        }
+
+        .room-toy.possessed .demonic-overlay::after {
+            content: '';
+            position: absolute;
+            top: 15%;
+            right: 20%;
+            width: 25%;
+            height: 20%;
+            background: radial-gradient(ellipse at center,
+                #ffffff 0%,
+                #ff0000 20%,
+                #ff0000 40%,
+                rgba(255, 0, 0, 0.8) 60%,
+                transparent 80%);
+            border-radius: 50%;
+            animation: eyeSpotGlow 0.5s ease-in-out infinite alternate;
+            animation-delay: 0.1s;
+            filter: blur(3px);
+        }
+
+        @keyframes eyeSpotGlow {
+            0% {
+                opacity: 0.8;
+                transform: scale(1);
+                filter: blur(3px) brightness(1);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1.3);
+                filter: blur(5px) brightness(1.8);
+            }
+        }
+
+        /* Teddy bear - position red glow for face */
+        #bedroom-bear {
+            bottom: 10%;
+            right: 5%;
+        }
+
+        #bedroom-bear.possessed::before {
+            top: 10%;
+            left: 20%;
+            width: 60%;
+            height: 35%;
+        }
+
+        #bedroom-bear.possessed .demonic-overlay::before {
+            top: 12%;
+            left: 25%;
+            width: 22%;
+            height: 18%;
+        }
+
+        #bedroom-bear.possessed .demonic-overlay::after {
+            top: 12%;
+            right: 25%;
+            width: 22%;
+            height: 18%;
+        }
+
+        /* Bunny - position red glow for face (lower due to ears) */
+        #living-room-bunny {
+            bottom: 15%;
+            left: 5%;
+        }
+
+        #living-room-bunny.possessed::before {
+            top: 30%;
+            left: 20%;
+            width: 60%;
+            height: 30%;
+        }
+
+        #living-room-bunny.possessed .demonic-overlay::before {
+            top: 32%;
+            left: 25%;
+            width: 20%;
+            height: 15%;
+        }
+
+        #living-room-bunny.possessed .demonic-overlay::after {
+            top: 32%;
+            right: 25%;
+            width: 20%;
+            height: 15%;
+        }
+
+        /* Ghost overlay */
+        .ghost-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ghost-image {
+            max-height: 70%;
+            max-width: 50%;
+            object-fit: contain;
+            animation: ghostFloat 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 20px rgba(255,0,0,0.5));
+            display: none;
+        }
+
+        .ghost-image.visible {
+            display: block;
+        }
+
+        .ghost-image.attacking {
+            animation: shake 0.5s infinite;
+            max-height: 90%;
+            max-width: 80%;
+        }
+
+        /* Possessed toy eyes overlay */
+        .possessed-eyes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+            z-index: 20;
+        }
+
+        /* possessed-eyes no longer used - replaced with other effects */
+        .possessed-eyes {
+            display: none !important;
+        }
+
+        /* Navigation */
+        .nav-arrows {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 30;
+        }
+
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            background: rgba(20, 10, 10, 0.8);
+            border: 2px solid var(--blood-red);
+            color: var(--ghost-white);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: var(--blood-red);
+            box-shadow: 0 0 20px var(--blood-red);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Action bar */
+        .action-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            background: linear-gradient(0deg, rgba(0,0,0,0.95) 0%, transparent 100%);
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            z-index: 30;
+        }
+
+        .action-btn {
+            font-family: 'Special Elite', 'Noto Sans SC', monospace;
+            font-size: clamp(0.85rem, 2.2vw, 1.1rem);
+            padding: 0.8rem 1.3rem;
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 2px solid #555;
+            color: var(--ghost-white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .action-btn:hover {
+            background: #3a3a3a;
+            border-color: var(--warning-amber);
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.3);
+        }
+
+        .action-btn.active {
+            background: var(--blood-red);
+            border-color: var(--blood-red);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Camera View */
+        #camera-view {
+            position: absolute;
+            inset: 0;
+            background: #0a0a0a;
+            display: none;
+            z-index: 40;
+        }
+
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.5rem;
+            padding: 60px 1rem 80px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .camera-feed {
+            position: relative;
+            aspect-ratio: 4/3;
+            background: #111;
+            border: 2px solid #333;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .camera-feed:hover {
+            border-color: var(--blood-red);
+            box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+        }
+
+        .camera-feed.has-ghost {
+            border-color: var(--blood-red);
+            animation: pulse 1s infinite;
+        }
+
+        .camera-feed img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(30%) brightness(0.7);
+        }
+
+        .camera-feed::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.1) 2px,
+                rgba(0, 0, 0, 0.1) 4px
+            );
+            pointer-events: none;
+        }
+
+        .camera-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 0.3rem;
+            background: rgba(0, 0, 0, 0.8);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .camera-ghost-indicator {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 10px;
+            height: 10px;
+            background: var(--blood-red);
+            border-radius: 50%;
+            display: none;
+            animation: pulse 0.5s infinite;
+        }
+
+        .camera-feed.has-ghost .camera-ghost-indicator {
+            display: block;
+        }
+
+        .close-camera {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 2rem;
+            background: none;
+            border: none;
+            color: var(--ghost-white);
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        /* Inventory */
+        #inventory-panel {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(10, 10, 10, 0.95);
+            border-left: 2px solid #333;
+            padding: 1rem;
+            z-index: 35;
+            display: none;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .inventory-title {
+            font-family: 'Creepster', 'Noto Sans SC', cursive;
+            font-size: 1.2rem;
+            color: var(--blood-red);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 60px);
+            gap: 0.5rem;
+        }
+
+        .inventory-slot {
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .inventory-slot:hover {
+            border-color: var(--warning-amber);
+        }
+
+        .inventory-slot img {
+            max-width: 50px;
+            max-height: 50px;
+            object-fit: contain;
+        }
+
+        .item-count {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.7rem;
+            background: rgba(0,0,0,0.8);
+            padding: 0 4px;
+            border-radius: 2px;
+        }
+
+        /* Event Modal */
+        #event-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 110;
+            padding: 1rem;
+        }
+
+        .event-content {
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: linear-gradient(180deg, #1a1010 0%, #0a0505 100%);
+            border: 2px solid var(--blood-red);
+            padding: 2rem;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .event-title {
+            font-family: 'Nosifer', 'Noto Sans SC', cursive;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            color: var(--blood-red);
+            margin-bottom: 1rem;
+        }
+
+        .event-text {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            color: #ccc;
+            white-space: pre-line;
+            text-align: left;
+        }
+
+        .event-choices {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .choice-btn {
+            font-family: 'Special Elite', 'Noto Sans SC', monospace;
+            font-size: 1rem;
+            padding: 0.8rem 1.5rem;
+            background: #1a1a1a;
+            border: 1px solid #444;
+            color: var(--ghost-white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-btn:hover {
+            background: var(--blood-red);
+            border-color: var(--blood-red);
+        }
+
+        /* Tutorial styles */
+        .tutorial-section {
+            margin-bottom: 1.5rem;
+            text-align: left;
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            border-left: 3px solid var(--blood-red);
+        }
+
+        .tutorial-section h3 {
+            color: var(--warning-amber);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .tutorial-section p {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #aaa;
+            margin-bottom: 0.3rem;
+        }
+
+        .tutorial-key {
+            display: inline-block;
+            background: #333;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-family: monospace;
+            margin: 0 0.2rem;
+        }
+
+        /* QTE System */
+        #qte-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(139, 0, 0, 0.3);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 70;
+        }
+
+        .qte-container {
+            text-align: center;
+        }
+
+        .qte-instruction {
+            font-family: 'Nosifer', 'Noto Sans SC', cursive;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: var(--ghost-white);
+            margin-bottom: 1rem;
+            animation: shake 0.3s infinite;
+        }
+
+        .qte-keys {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .qte-key {
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+            border: 3px solid var(--ghost-white);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .qte-key.active {
+            background: var(--blood-red);
+            border-color: var(--blood-red);
+            animation: pulse 0.5s infinite;
+        }
+
+        .qte-key.success {
+            background: var(--safe-green);
+            border-color: var(--safe-green);
+        }
+
+        .qte-timer {
+            width: 200px;
+            height: 10px;
+            background: #333;
+            margin: 1rem auto;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .qte-timer-fill {
+            height: 100%;
+            background: var(--blood-red);
+            transition: width 0.1s linear;
+        }
+
+        /* End Screen */
+        #end-screen {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 80;
+            padding: 2rem;
+        }
+
+        .end-title {
+            font-family: 'Nosifer', cursive;
+            font-size: clamp(2rem, 8vw, 4rem);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .end-title.victory {
+            color: #FFD700;
+            text-shadow: 0 0 30px #FFD700;
+        }
+
+        .end-title.defeat {
+            color: var(--blood-red);
+            text-shadow: 0 0 30px var(--blood-red);
+            animation: glitch 0.5s infinite;
+        }
+
+        .end-subtitle {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: #888;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .end-stats {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .end-stats p {
+            margin: 0.5rem 0;
+            font-size: 1rem;
+        }
+
+        /* Room info tooltip */
+        .room-info {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 0.5rem 1.5rem;
+            border: 1px solid #444;
+            font-family: 'Creepster', 'Noto Sans SC', cursive;
+            font-size: 1.2rem;
+            z-index: 25;
+            white-space: nowrap;
+        }
+
+        /* Scanline effect */
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 45;
+            overflow: hidden;
+            display: none;
+        }
+
+        .scanlines::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.2) 2px,
+                rgba(0, 0, 0, 0.2) 4px
+            );
+            animation: scanline 8s linear infinite;
+        }
+
+        #camera-view .scanlines {
+            display: block;
+        }
+
+        /* Message log */
+        .message-log {
+            position: absolute;
+            bottom: 80px;
+            left: 10px;
+            max-width: 300px;
+            z-index: 25;
+        }
+
+        .log-message {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 0.4rem 0.8rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.8rem;
+            border-left: 3px solid var(--blood-red);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .log-message.warning {
+            border-color: var(--warning-amber);
+            color: var(--warning-amber);
+        }
+
+        .log-message.danger {
+            border-color: var(--blood-red);
+            color: #ff6666;
+        }
+
+        .log-message.info {
+            border-color: var(--power-blue);
+            color: #88aacc;
+        }
+
+        /* Hide mechanic */
+        #hide-overlay {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 55;
+        }
+
+        .hide-text {
+            font-family: 'Special Elite', 'Noto Sans SC', monospace;
+            font-size: 1.2rem;
+            color: #555;
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        @media (max-width: 600px) {
+            .hud {
+                padding: 0.3rem 0.5rem;
+            }
+
+            .stat-bar-fill {
+                width: 50px;
+            }
+
+            .action-btn {
+                padding: 0.5rem 0.7rem;
+                font-size: 0.65rem;
+            }
+
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+            }
+
+            .room-toy img {
+                max-height: 80px;
+            }
+        }
+    </style>
+</head>
+<body data-lang="en">
+    <div class="game-container">
+        <!-- Language Toggle -->
+        <div class="lang-toggle">
+            <button class="lang-btn active" onclick="setLanguage('en')">EN</button>
+            <button class="lang-btn" onclick="setLanguage('zh')">中文</button>
+        </div>
+
+        <!-- Main Menu -->
+        <div id="main-menu">
+            <h1 class="menu-title">MIDNIGHT HOME</h1>
+            <p class="menu-subtitle" data-i18n="subtitle">Survive Until Dawn</p>
+            <button class="menu-btn" onclick="startGame()" data-i18n="begin">BEGIN NIGHT</button>
+            <button class="menu-btn" onclick="showTutorial()" data-i18n="howToPlay">HOW TO PLAY</button>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen">
+            <div class="hud">
+                <div class="hud-left">
+                    <div class="stat-bar">
+                        <span class="stat-label">⚡ <span data-i18n="power">Power</span></span>
+                        <div class="stat-bar-fill">
+                            <div class="stat-bar-inner power-bar" id="power-bar" style="width: 100%"></div>
+                        </div>
+                        <span id="power-text">100%</span>
+                    </div>
+                    <div class="stat-bar">
+                        <span class="stat-label">🧠 <span data-i18n="sanity">Sanity</span></span>
+                        <div class="stat-bar-fill">
+                            <div class="stat-bar-inner sanity-bar" id="sanity-bar" style="width: 100%"></div>
+                        </div>
+                        <span id="sanity-text">100%</span>
+                    </div>
+                    <div class="stat-bar">
+                        <span class="stat-label">❤️ <span data-i18n="health">Health</span></span>
+                        <div class="stat-bar-fill">
+                            <div class="stat-bar-inner health-bar" id="health-bar" style="width: 100%"></div>
+                        </div>
+                        <span id="health-text">100%</span>
+                    </div>
+                </div>
+                <div class="hud-center">
+                    <div class="time-display" id="time-display">12:00 AM</div>
+                    <div id="night-phase" style="font-size: 0.8rem; opacity: 0.7;" data-i18n="night1">Night 1</div>
+                </div>
+                <div class="hud-right">
+                    <div style="font-size: 0.8rem;">🔦 <span id="battery-count">3</span></div>
+                    <div style="font-size: 0.8rem;">💧 <span id="holy-water-count">1</span></div>
+                    <div style="font-size: 0.8rem;">🛡️ <span id="talisman-count">0</span></div>
+                </div>
+            </div>
+
+            <div class="room-view" id="room-view">
+                <img class="room-image" id="room-image" src="" alt="Room">
+                <div class="flashlight-overlay" id="flashlight-overlay"></div>
+
+                <!-- Room Toys -->
+                <div class="room-toy" id="bedroom-bear" style="display: none;">
+                    <img src="https://pfst.cf2.poecdn.net/base/image/331453b06386e4f97b3859693d9fba715cd250f72f2fab6780e5fa8c802c9f7d?w=1024&h=1536" alt="Teddy Bear">
+                    <div class="demonic-overlay"></div>
+                </div>
+                <div class="room-toy" id="living-room-bunny" style="display: none;">
+                    <img src="https://pfst.cf2.poecdn.net/base/image/43180f04cf3c519cea98481d2465cf185c4bb43c5df0e085384b6a72fc0abed6?w=1024&h=1536" alt="Toy Bunny">
+                    <div class="demonic-overlay"></div>
+                </div>
+
+                <div class="ghost-container">
+                    <img class="ghost-image" id="ghost-image" src="" alt="">
+                </div>
+                <div class="possessed-eyes" id="possessed-eyes">
+                    <div class="eye-glow" id="eye1"></div>
+                    <div class="eye-glow" id="eye2"></div>
+                </div>
+            </div>
+
+            <div class="room-info" id="room-info">Bedroom</div>
+
+            <div class="nav-arrows">
+                <button class="nav-btn" id="nav-left" onclick="navigate('left')">◄</button>
+                <button class="nav-btn" id="nav-up" onclick="navigate('up')">▲</button>
+                <button class="nav-btn" id="nav-down" onclick="navigate('down')">▼</button>
+                <button class="nav-btn" id="nav-right" onclick="navigate('right')">►</button>
+            </div>
+
+            <div class="message-log" id="message-log"></div>
+
+            <div class="action-bar">
+                <button class="action-btn" id="btn-flashlight" onclick="toggleFlashlight()">🔦 <span data-i18n="flashlight">Flashlight</span></button>
+                <button class="action-btn" id="btn-camera" onclick="openCameras()">📹 <span data-i18n="cameras">Cameras</span></button>
+                <button class="action-btn" id="btn-hide" onclick="hideAction()">🙈 <span data-i18n="hide">Hide</span></button>
+                <button class="action-btn" id="btn-inventory" onclick="toggleInventory()">🎒 <span data-i18n="inventory">Inventory</span></button>
+                <button class="action-btn" id="btn-interact" onclick="interactWithRoom()">👆 <span data-i18n="interact">Interact</span></button>
+            </div>
+
+            <div id="inventory-panel">
+                <div class="inventory-title" data-i18n="inventory">INVENTORY</div>
+                <div class="inventory-grid" id="inventory-grid"></div>
+            </div>
+        </div>
+
+        <!-- Camera View -->
+        <div id="camera-view">
+            <button class="close-camera" onclick="closeCameras()">✕</button>
+            <div class="scanlines"></div>
+            <div class="camera-grid" id="camera-grid"></div>
+        </div>
+
+        <!-- Event Modal -->
+        <div id="event-modal">
+            <div class="event-content">
+                <h2 class="event-title" id="event-title"></h2>
+                <div class="event-text" id="event-text"></div>
+                <div class="event-choices" id="event-choices"></div>
+            </div>
+        </div>
+
+        <!-- QTE Overlay -->
+        <div id="qte-overlay">
+            <div class="qte-container">
+                <div class="qte-instruction" id="qte-instruction">TAP THE KEYS!</div>
+                <div class="qte-keys" id="qte-keys"></div>
+                <div class="qte-timer">
+                    <div class="qte-timer-fill" id="qte-timer-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hide Overlay -->
+        <div id="hide-overlay">
+            <div class="hide-text" id="hide-text">Hiding under the bed... Stay quiet...</div>
+        </div>
+
+        <!-- End Screen -->
+        <div id="end-screen">
+            <h1 class="end-title" id="end-title"></h1>
+            <p class="end-subtitle" id="end-subtitle"></p>
+            <div class="end-stats" id="end-stats"></div>
+            <button class="menu-btn" onclick="location.reload()" data-i18n="tryAgain">TRY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        // ============ SOUND SYSTEM ============
+        class HorrorSoundSystem {
+            constructor() {
+                this.audioContext = null;
+                this.masterGain = null;
+                this.ambientGain = null;
+                this.isInitialized = false;
+                this.ambientOscillators = [];
+                this.heartbeatInterval = null;
+            }
+
+            init() {
+                if (this.isInitialized) return;
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.masterGain = this.audioContext.createGain();
+                    this.masterGain.gain.value = 0.5;
+                    this.masterGain.connect(this.audioContext.destination);
+
+                    this.ambientGain = this.audioContext.createGain();
+                    this.ambientGain.gain.value = 0.3;
+                    this.ambientGain.connect(this.masterGain);
+
+                    this.isInitialized = true;
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+
+            // Creepy ambient drone
+            startAmbient() {
+                if (!this.isInitialized) return;
+                this.stopAmbient();
+
+                // Low drone
+                const drone = this.audioContext.createOscillator();
+                drone.type = 'sine';
+                drone.frequency.value = 55;
+
+                const droneGain = this.audioContext.createGain();
+                droneGain.gain.value = 0.15;
+
+                // Add slight vibrato
+                const lfo = this.audioContext.createOscillator();
+                lfo.frequency.value = 0.5;
+                const lfoGain = this.audioContext.createGain();
+                lfoGain.gain.value = 3;
+                lfo.connect(lfoGain);
+                lfoGain.connect(drone.frequency);
+
+                drone.connect(droneGain);
+                droneGain.connect(this.ambientGain);
+
+                drone.start();
+                lfo.start();
+                this.ambientOscillators.push(drone, lfo);
+
+                // High eerie tone
+                const eerie = this.audioContext.createOscillator();
+                eerie.type = 'sine';
+                eerie.frequency.value = 440;
+
+                const eerieGain = this.audioContext.createGain();
+                eerieGain.gain.value = 0.02;
+
+                const eerieFilter = this.audioContext.createBiquadFilter();
+                eerieFilter.type = 'bandpass';
+                eerieFilter.frequency.value = 800;
+                eerieFilter.Q.value = 10;
+
+                eerie.connect(eerieFilter);
+                eerieFilter.connect(eerieGain);
+                eerieGain.connect(this.ambientGain);
+
+                eerie.start();
+                this.ambientOscillators.push(eerie);
+            }
+
+            stopAmbient() {
+                this.ambientOscillators.forEach(osc => {
+                    try { osc.stop(); } catch(e) {}
+                });
+                this.ambientOscillators = [];
+            }
+
+            // Jump scare - loud sudden sound
+            playJumpScare() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+
+                // Noise burst
+                const bufferSize = this.audioContext.sampleRate * 0.5;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.1));
+                }
+
+                const noise = this.audioContext.createBufferSource();
+                noise.buffer = buffer;
+
+                const noiseGain = this.audioContext.createGain();
+                noiseGain.gain.setValueAtTime(0.8, now);
+                noiseGain.gain.exponentialDecayTo = 0.01;
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 2000;
+
+                noise.connect(filter);
+                filter.connect(noiseGain);
+                noiseGain.connect(this.masterGain);
+
+                noise.start(now);
+
+                // Scary chord
+                const freqs = [130.81, 155.56, 185.00, 233.08];
+                freqs.forEach((freq, i) => {
+                    const osc = this.audioContext.createOscillator();
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = freq;
+
+                    const gain = this.audioContext.createGain();
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+                });
+            }
+
+            // Ghost whisper sound
+            playWhisper() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+                const duration = 1.5;
+
+                // Filtered noise for whisper effect
+                const bufferSize = this.audioContext.sampleRate * duration;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * 0.5;
+                }
+
+                const noise = this.audioContext.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 1500;
+                filter.Q.value = 5;
+
+                // Modulate filter for whisper effect
+                const lfo = this.audioContext.createOscillator();
+                lfo.frequency.value = 8;
+                const lfoGain = this.audioContext.createGain();
+                lfoGain.gain.value = 500;
+                lfo.connect(lfoGain);
+                lfoGain.connect(filter.frequency);
+
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.15, now + 0.2);
+                gain.gain.linearRampToValueAtTime(0, now + duration);
+
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+
+                lfo.start(now);
+                noise.start(now);
+                lfo.stop(now + duration);
+                noise.stop(now + duration);
+            }
+
+            // Heartbeat for tension - accelerates based on danger
+            startHeartbeat(bpm = 60) {
+                if (!this.isInitialized) return;
+                this.stopHeartbeat();
+
+                this.currentBPM = bpm;
+                this.targetBPM = bpm;
+                this.isHeartbeatActive = true;
+
+                const playBeat = () => {
+                    if (!this.isHeartbeatActive) return;
+
+                    const now = this.audioContext.currentTime;
+
+                    // Volume increases with BPM (louder when scared)
+                    const volumeScale = Math.min(1, this.currentBPM / 120);
+
+                    // First thump
+                    const osc1 = this.audioContext.createOscillator();
+                    osc1.type = 'sine';
+                    osc1.frequency.setValueAtTime(60 + (this.currentBPM - 60) * 0.3, now);
+                    osc1.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+
+                    const gain1 = this.audioContext.createGain();
+                    gain1.gain.setValueAtTime(0.3 + volumeScale * 0.3, now);
+                    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                    osc1.connect(gain1);
+                    gain1.connect(this.masterGain);
+                    osc1.start(now);
+                    osc1.stop(now + 0.15);
+
+                    // Second thump (slightly softer)
+                    const osc2 = this.audioContext.createOscillator();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(50 + (this.currentBPM - 60) * 0.2, now + 0.15);
+                    osc2.frequency.exponentialRampToValueAtTime(25, now + 0.25);
+
+                    const gain2 = this.audioContext.createGain();
+                    gain2.gain.setValueAtTime(0.2 + volumeScale * 0.2, now + 0.15);
+                    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+                    osc2.connect(gain2);
+                    gain2.connect(this.masterGain);
+                    osc2.start(now + 0.15);
+                    osc2.stop(now + 0.3);
+
+                    // Gradually adjust current BPM toward target
+                    if (this.currentBPM < this.targetBPM) {
+                        this.currentBPM = Math.min(this.targetBPM, this.currentBPM + 5);
+                    } else if (this.currentBPM > this.targetBPM) {
+                        this.currentBPM = Math.max(this.targetBPM, this.currentBPM - 3);
+                    }
+
+                    // Schedule next beat
+                    const interval = 60000 / this.currentBPM;
+                    this.heartbeatTimeout = setTimeout(playBeat, interval);
+                };
+
+                playBeat();
+            }
+
+            // Accelerate heartbeat (call this when danger increases)
+            accelerateHeartbeat(targetBPM) {
+                if (!this.isHeartbeatActive) {
+                    this.startHeartbeat(70);
+                }
+                this.targetBPM = Math.min(180, Math.max(60, targetBPM));
+            }
+
+            // Slow down heartbeat (call when danger decreases)
+            calmHeartbeat() {
+                this.targetBPM = 60;
+            }
+
+            stopHeartbeat() {
+                this.isHeartbeatActive = false;
+                if (this.heartbeatInterval) {
+                    clearInterval(this.heartbeatInterval);
+                    this.heartbeatInterval = null;
+                }
+                if (this.heartbeatTimeout) {
+                    clearTimeout(this.heartbeatTimeout);
+                    this.heartbeatTimeout = null;
+                }
+            }
+
+            // Static/glitch sound
+            playStatic(duration = 0.3) {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+                const bufferSize = this.audioContext.sampleRate * duration;
+                const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+                const data = buffer.getChannelData(0);
+
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+
+                const noise = this.audioContext.createBufferSource();
+                noise.buffer = buffer;
+
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + duration);
+
+                noise.connect(gain);
+                gain.connect(this.masterGain);
+                noise.start(now);
+            }
+
+            // Creaking door sound
+            playCreak() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(400, now + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(150, now + 0.6);
+
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 800;
+                filter.Q.value = 10;
+
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.6);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+
+            // Footsteps
+            playFootstep() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 200;
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+
+            // Clock tick
+            playTick() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.value = 1000;
+
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start(now);
+                osc.stop(now + 0.05);
+            }
+
+            // Power down sound
+            playPowerDown() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.exponentialRampToValueAtTime(20, now + 1);
+
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start(now);
+                osc.stop(now + 1);
+            }
+
+            // Victory fanfare
+            playVictory() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+
+                notes.forEach((freq, i) => {
+                    const osc = this.audioContext.createOscillator();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+
+                    const gain = this.audioContext.createGain();
+                    gain.gain.setValueAtTime(0, now + i * 0.2);
+                    gain.gain.linearRampToValueAtTime(0.2, now + i * 0.2 + 0.1);
+                    gain.gain.linearRampToValueAtTime(0.1, now + i * 0.2 + 0.5);
+                    gain.gain.linearRampToValueAtTime(0, now + 2);
+
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+
+                    osc.start(now + i * 0.2);
+                    osc.stop(now + 2);
+                });
+            }
+
+            // Game over dark sound
+            playGameOver() {
+                if (!this.isInitialized) return;
+
+                const now = this.audioContext.currentTime;
+
+                // Deep drone
+                const osc = this.audioContext.createOscillator();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(80, now);
+                osc.frequency.exponentialRampToValueAtTime(30, now + 2);
+
+                const filter = this.audioContext.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 200;
+
+                const gain = this.audioContext.createGain();
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 2);
+
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+
+                osc.start(now);
+                osc.stop(now + 2);
+            }
+
+            setVolume(value) {
+                if (this.masterGain) {
+                    this.masterGain.gain.value = Math.max(0, Math.min(1, value));
+                }
+            }
+        }
+
+        const SoundSystem = new HorrorSoundSystem();
+
+        // ============ LANGUAGE SYSTEM ============
+        let currentLang = 'en';
+
+        const translations = {
+            en: {
+                subtitle: 'Survive Until Dawn',
+                begin: 'BEGIN NIGHT',
+                howToPlay: 'HOW TO PLAY',
+                power: 'Power',
+                sanity: 'Sanity',
+                health: 'Health',
+                night1: 'Night 1',
+                night2: 'Night 2',
+                night3: 'Night 3',
+                night4: 'Night 4',
+                night5: 'Night 5',
+                nightComplete: 'Night Complete!',
+                continueNextNight: 'CONTINUE TO NEXT NIGHT',
+                finalVictory: 'FINAL VICTORY',
+                allNightsComplete: 'You survived all 5 nights!',
+                flashlight: 'Flashlight',
+                cameras: 'Cameras',
+                hide: 'Hide',
+                inventory: 'INVENTORY',
+                interact: 'Interact',
+                tryAgain: 'TRY AGAIN',
+                gameOver: 'GAME OVER',
+                youSurvived: 'YOU SURVIVED',
+                healthDeath: 'The spirits claimed your body...',
+                sanityDeath: 'Your mind shattered into darkness...',
+                dawnBreaks: 'Dawn breaks... The spirits retreat to the shadows.',
+                survivedUntil: 'Survived until',
+                ghostsRepelled: 'Ghosts repelled',
+                timesHidden: 'Times hidden',
+                itemsFound: 'Items found',
+                finalHealth: 'Final Health',
+                finalSanity: 'Final Sanity',
+                perfectEnding: 'Perfect Survival - You remained strong!',
+                trueEnding: 'True Ending - You found the charm and weakened the curse.',
+                narrowEscape: 'Narrow Escape - You barely made it...',
+                normalEnding: 'Normal Ending',
+                homeAlone: "You're home alone. Survive until 6 AM.",
+                nightBegun: 'The night has begun...',
+                flashlightOn: 'Flashlight ON',
+                noBatteries: 'No batteries!',
+                camerasActive: 'Cameras active - draining power',
+                noPowerCameras: 'Not enough power for cameras!',
+                emergHiding: 'You emerge from hiding...',
+                hidingSpot: 'Hiding',
+                cantHideForever: "You can't stay hidden forever...",
+                nothingHere: 'Nothing interesting here...',
+                foundBattery: 'Found a battery!',
+                foundHolyWater: 'Found holy water!',
+                foundTalisman: 'Found a protective talisman!',
+                charmGlows: 'The protective charm glows warmly...',
+                itFoundYou: 'IT FOUND YOU!',
+                passedBy: 'It passed by...',
+                escaped: 'You escaped!',
+                caughtYou: 'It caught you!',
+                lightDrivesAway: 'The light drives it away!',
+                holyWaterBurns: 'The holy water burns it! It flees!',
+                talismanGlows: 'The talisman glows! The spirit retreats!',
+                brightLight: 'The bright light drives it away!',
+                noRightItem: "You don't have the right item!",
+                tapKeys: 'TAP THE KEYS!',
+                // Tutorial
+                tutorialTitle: 'SURVIVAL GUIDE',
+                tutorialObjective: '🎯 OBJECTIVE',
+                tutorialObjectiveText: 'Survive from 12 AM to 6 AM without being caught by ghosts. The night is divided into 6 hours, with ghost activity increasing each hour.',
+                tutorialStats: '📊 STATUS BARS',
+                tutorialPower: '⚡ Power: Using cameras and flashlight drains power. At 0%, you lose vital defenses.',
+                tutorialSanity: '🧠 Sanity: Seeing ghosts reduces sanity. At 0%, you lose the game.',
+                tutorialHealth: '❤️ Health: Ghost attacks reduce health. At 0%, game over.',
+                tutorialActions: '🎮 ACTIONS',
+                tutorialFlashlight: '🔦 Flashlight: Illuminates dark areas and repels possessed toys. Uses battery.',
+                tutorialCameras: '📹 Cameras: Monitor all rooms for ghost activity. Consumes power.',
+                tutorialHide: '🙈 Hide: When a ghost approaches, hide! But don\'t stay too long.',
+                tutorialInteract: '👆 Interact: Search rooms for useful items like batteries and holy water.',
+                tutorialGhosts: '👻 THE GHOSTS',
+                tutorialWeepingWoman: '😢 The Weeping Woman: Haunts bathroom and hallway. Weakness: Holy Water 💧',
+                tutorialLostChild: '👦 The Lost Child: Haunts attic and bedroom. Weakness: Talisman 🛡️',
+                tutorialPossessedToys: '🧸 Possessed Toys: The teddy bear and bunny can become possessed - their eyes glow red! Weakness: Flashlight 🔦',
+                tutorialControls: '⌨️ KEYBOARD CONTROLS',
+                tutorialControlsList: 'Arrow keys: Navigate | F: Flashlight | C: Cameras | H: Hide | I: Inventory | E: Interact',
+                tutorialTips: '💡 TIPS',
+                tutorialTip1: '• Watch the cameras regularly to track ghost movements',
+                tutorialTip2: '• If toys\' eyes glow red, use the flashlight immediately',
+                tutorialTip3: '• Find the Protective Charm in the attic for the True Ending',
+                tutorialTip4: '• Balance power usage - don\'t waste it!',
+                understood: 'I UNDERSTAND',
+                // Room names
+                bedroom: 'Bedroom',
+                living_room: 'Living Room',
+                kitchen: 'Kitchen',
+                hallway: 'Hallway',
+                bathroom: 'Bathroom',
+                basement: 'Basement',
+                attic: 'Attic',
+                // Events
+                strangeNoise: 'Strange Noise',
+                strangeNoiseText: 'You hear scratching sounds coming from under the bed. Your heart pounds in your chest.',
+                checkUnderBed: 'Check under the bed',
+                ignoreIt: 'Ignore it',
+                bedShakes: 'The Bed Shakes',
+                bedShakesText: 'The bed suddenly begins to shake violently! Something is underneath!',
+                jumpOff: 'Jump off quickly!',
+                stayFrozen: 'Stay frozen',
+                tvStatic: 'TV Static',
+                tvStaticText: 'The television suddenly turns on by itself, showing nothing but static. Through the white noise, you think you can see a face forming...',
+                turnOffTV: 'Turn off the TV',
+                watchStatic: 'Watch the static',
+                didItMove: 'Did It Move?',
+                didItMoveText: 'You could swear the toy bunny in the corner just turned its head to look at you. Its button eyes seem to gleam red for a moment.',
+                shineFlashlight: 'Shine flashlight on it',
+                backAway: 'Back away slowly',
+                attacks: 'ATTACKS!',
+                comingForYou: "It's coming for you! Quick, what do you do?",
+                hideChoice: 'HIDE!',
+                useItem: 'Use item',
+                runChoice: 'RUN!'
+            },
+            zh: {
+                subtitle: '活到黎明',
+                begin: '开始夜晚',
+                howToPlay: '游戏教程',
+                power: '电力',
+                sanity: '理智',
+                health: '生命',
+                night1: '第一夜',
+                night2: '第二夜',
+                night3: '第三夜',
+                night4: '第四夜',
+                night5: '第五夜',
+                nightComplete: '夜晚结束!',
+                continueNextNight: '继续下一夜',
+                finalVictory: '最终胜利',
+                allNightsComplete: '你挺过了所有5个夜晚!',
+                flashlight: '手电筒',
+                cameras: '监控',
+                hide: '躲藏',
+                inventory: '物品栏',
+                interact: '互动',
+                tryAgain: '再试一次',
+                gameOver: '游戏结束',
+                youSurvived: '你活下来了',
+                healthDeath: '灵魂夺走了你的身体...',
+                sanityDeath: '你的精神陷入了黑暗...',
+                dawnBreaks: '黎明到来...鬼魂退回了阴影中。',
+                survivedUntil: '存活到',
+                ghostsRepelled: '击退鬼魂',
+                timesHidden: '躲藏次数',
+                itemsFound: '找到物品',
+                finalHealth: '最终生命',
+                finalSanity: '最终理智',
+                perfectEnding: '完美结局 - 你保持了坚强！',
+                trueEnding: '真实结局 - 你找到了护身符并削弱了诅咒。',
+                narrowEscape: '惊险逃脱 - 你差点没活下来...',
+                normalEnding: '普通结局',
+                homeAlone: '你独自在家。活到早上6点。',
+                nightBegun: '夜晚开始了...',
+                flashlightOn: '手电筒开启',
+                noBatteries: '没有电池！',
+                camerasActive: '监控开启中 - 正在消耗电力',
+                noPowerCameras: '电力不足，无法使用监控！',
+                emergHiding: '你从躲藏处出来...',
+                hidingSpot: '躲在',
+                cantHideForever: '你不能永远躲着...',
+                nothingHere: '这里没有什么有趣的东西...',
+                foundBattery: '找到了电池！',
+                foundHolyWater: '找到了圣水！',
+                foundTalisman: '找到了护身符！',
+                charmGlows: '护身符温暖地发着光...',
+                itFoundYou: '它发现你了！',
+                passedBy: '它走过去了...',
+                escaped: '你逃脱了！',
+                caughtYou: '它抓住你了！',
+                lightDrivesAway: '光芒把它赶走了！',
+                holyWaterBurns: '圣水灼伤了它！它逃跑了！',
+                talismanGlows: '护身符发光了！灵魂退却了！',
+                brightLight: '强光把它赶走了！',
+                noRightItem: '你没有合适的物品！',
+                tapKeys: '快速点击按键！',
+                // Tutorial
+                tutorialTitle: '生存指南',
+                tutorialObjective: '🎯 目标',
+                tutorialObjectiveText: '从午夜12点生存到早上6点，不被鬼魂抓住。夜晚分为6个小时，每小时鬼魂活动会增加。',
+                tutorialStats: '📊 状态栏',
+                tutorialPower: '⚡ 电力：使用监控和手电筒会消耗电力。电力归零后，你将失去重要防御。',
+                tutorialSanity: '🧠 理智：看到鬼魂会降低理智。理智归零，游戏结束。',
+                tutorialHealth: '❤️ 生命：鬼魂攻击会降低生命。生命归零，游戏结束。',
+                tutorialActions: '🎮 操作',
+                tutorialFlashlight: '🔦 手电筒：照亮黑暗区域，驱赶被附身的玩具。消耗电池。',
+                tutorialCameras: '📹 监控：监视所有房间的鬼魂活动。消耗电力。',
+                tutorialHide: '🙈 躲藏：当鬼魂靠近时，躲起来！但不要躲太久。',
+                tutorialInteract: '👆 互动：搜索房间寻找电池、圣水等有用物品。',
+                tutorialGhosts: '👻 鬼魂介绍',
+                tutorialWeepingWoman: '😢 哭泣的女人：出没于浴室和走廊。弱点：圣水 💧',
+                tutorialLostChild: '👦 迷失的孩子：出没于阁楼和卧室。弱点：护身符 🛡️',
+                tutorialPossessedToys: '🧸 被附身的玩具：泰迪熊和兔子可能被附身 - 它们的眼睛会发出恐怖的红光！弱点：手电筒 🔦',
+                tutorialControls: '⌨️ 键盘控制',
+                tutorialControlsList: '方向键：导航 | F：手电筒 | C：监控 | H：躲藏 | I：物品栏 | E：互动',
+                tutorialTips: '💡 小贴士',
+                tutorialTip1: '• 定期查看监控，追踪鬼魂移动',
+                tutorialTip2: '• 如果玩具的眼睛发红光，立即使用手电筒',
+                tutorialTip3: '• 在阁楼找到护身符可以达成真实结局',
+                tutorialTip4: '• 平衡电力使用 - 不要浪费！',
+                understood: '我明白了',
+                // Room names
+                bedroom: '卧室',
+                living_room: '客厅',
+                kitchen: '厨房',
+                hallway: '走廊',
+                bathroom: '浴室',
+                basement: '地下室',
+                attic: '阁楼',
+                // Events
+                strangeNoise: '奇怪的声音',
+                strangeNoiseText: '你听到床底下传来抓挠声。你的心跳加速。',
+                checkUnderBed: '查看床底',
+                ignoreIt: '忽略它',
+                bedShakes: '床在摇晃',
+                bedShakesText: '床突然剧烈摇晃！下面有什么东西！',
+                jumpOff: '快跳下床！',
+                stayFrozen: '保持不动',
+                tvStatic: '电视雪花',
+                tvStaticText: '电视突然自己打开了，只显示雪花。透过白噪音，你似乎看到一张脸在形成...',
+                turnOffTV: '关掉电视',
+                watchStatic: '观看雪花',
+                didItMove: '它动了吗？',
+                didItMoveText: '你发誓角落里的玩具兔子刚才转头看了你一眼。它的纽扣眼睛似乎闪了一下红光。',
+                shineFlashlight: '用手电筒照它',
+                backAway: '慢慢后退',
+                attacks: '发起攻击！',
+                comingForYou: '它向你冲来！快，你要怎么做？',
+                hideChoice: '躲起来！',
+                useItem: '使用物品',
+                runChoice: '逃跑！'
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.body.setAttribute('data-lang', lang);
+
+            // Update buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if ((lang === 'en' && btn.textContent === 'EN') ||
+                    (lang === 'zh' && btn.textContent === '中文')) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update all i18n elements
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.textContent = translations[lang][key];
+                }
+            });
+
+            // Update room info if game is running
+            if (document.getElementById('game-screen').style.display === 'block') {
+                updateRoomView();
+            }
+
+            // Refresh tutorial if it's currently open
+            if (document.getElementById('event-modal').style.display === 'flex' &&
+                document.getElementById('event-title').textContent === t('tutorialTitle') ||
+                document.getElementById('event-title').textContent === translations['en']['tutorialTitle'] ||
+                document.getElementById('event-title').textContent === translations['zh']['tutorialTitle']) {
+                showTutorial();
+            }
+        }
+
+        function t(key) {
+            return translations[currentLang][key] || translations['en'][key] || key;
+        }
+
+        // ============ GAME STATE ============
+        const GameState = {
+            currentHour: 0,
+            gameMinutes: 0,
+            nightNumber: 1,
+            timeSpeed: 1200, // Slower time on Night 1 (easier)
+            power: 100,
+            sanity: 100,
+            health: 100,
+            batteries: 5, // More batteries on Night 1
+            holyWater: 2, // More holy water on Night 1
+            talismans: 1, // Start with a talisman on Night 1
+            inventory: [],
+            currentRoom: 'bedroom',
+            isFlashlightOn: false,
+            isHiding: false,
+            isCameraOpen: false,
+            isInQTE: false,
+            isPaused: false,
+            ghosts: {
+                weepingWoman: { room: 'bathroom', active: false, aggression: 0 },
+                lostChild: { room: 'attic', active: false, aggression: 0 },
+                possessedBear: { room: 'bedroom', active: false, aggression: 0 },
+                possessedBunny: { room: 'living_room', active: false, aggression: 0 }
+            },
+            eventsTriggered: [],
+            itemsFound: [],
+            timesHidden: 0,
+            ghostsRepelled: 0
+        };
+
+        // ============ ROOM DATA ============
+        const Rooms = {
+            bedroom: {
+                nameKey: 'bedroom',
+                image: 'https://pfst.cf2.poecdn.net/base/image/6671adad6684291e1644b87009daadf1e3560dfc5840cff902abd11910e778bc?w=1536&h=1024',
+                connections: { left: 'hallway', down: 'living_room' },
+                items: ['flashlight_battery'],
+                events: ['strange_noise', 'bed_shake'],
+                hideSpotKey: 'underBed',
+                hasToy: 'bear'
+            },
+            living_room: {
+                nameKey: 'living_room',
+                image: 'https://pfst.cf2.poecdn.net/base/image/6b32984dd06c603aed55386362218b699b80c8c617346303f643238311947185?w=1536&h=1024',
+                connections: { up: 'bedroom', right: 'kitchen', left: 'hallway' },
+                items: ['talisman'],
+                events: ['tv_static', 'bunny_moves'],
+                hideSpotKey: 'behindCouch',
+                hasToy: 'bunny'
+            },
+            kitchen: {
+                nameKey: 'kitchen',
+                image: 'https://pfst.cf2.poecdn.net/base/image/1a9d20cf950bd5fbba99fd64d66e37e7da68f63d8f8c4ced659c97a66eb6b1f0?w=1536&h=1024',
+                connections: { left: 'living_room', down: 'basement' },
+                items: ['holy_water'],
+                events: ['knife_falls'],
+                hideSpotKey: 'inPantry'
+            },
+            hallway: {
+                nameKey: 'hallway',
+                image: 'https://pfst.cf2.poecdn.net/base/image/896fd04d5bccdeddc2810a91a58f88fc1fbc9b90ddbaf88e9463b2ea68bc8f90?w=1024&h=1536',
+                connections: { right: 'bedroom', up: 'attic', down: 'bathroom' },
+                items: [],
+                events: ['footsteps'],
+                hideSpotKey: 'inCloset'
+            },
+            bathroom: {
+                nameKey: 'bathroom',
+                image: 'https://pfst.cf2.poecdn.net/base/image/85191be5e211e7a0341b39be013dd273c072bee960842247645c374e28d5b633?w=1024&h=1536',
+                connections: { up: 'hallway' },
+                items: ['flashlight_battery'],
+                events: ['mirror_fog'],
+                hideSpotKey: 'inBathtub'
+            },
+            basement: {
+                nameKey: 'basement',
+                image: 'https://pfst.cf2.poecdn.net/base/image/f414bb862d636b01228d3684a1fa50761fab2079dba96ad1c3695b0c770e9a90?w=1536&h=1024',
+                connections: { up: 'kitchen' },
+                items: ['ancient_diary', 'holy_water'],
+                events: ['power_flicker'],
+                hideSpotKey: 'behindHeater'
+            },
+            attic: {
+                nameKey: 'attic',
+                image: 'https://pfst.cf2.poecdn.net/base/image/3b413f181983736cd0e087fd5c3c4f1cffec47a2408bf7fc8f55ef895db64681?w=1536&h=1024',
+                connections: { down: 'hallway' },
+                items: ['protective_charm', 'old_photo'],
+                events: ['child_laugh'],
+                hideSpotKey: 'behindBoxes'
+            }
+        };
+
+        const Ghosts = {
+            weepingWoman: {
+                name: 'The Weeping Woman',
+                nameZh: '哭泣的女人',
+                image: 'https://pfst.cf2.poecdn.net/base/image/87672146f34c4492b149592ff195281dfde0c310e579ed03d3d2004fca460c04?w=1024&h=1536',
+                crouchImage: 'https://pfst.cf2.poecdn.net/base/image/a77521d868866fcc7a9711c07fb7d50c707312bf4cfe751d3eba752f5d989662?w=1024&h=1536',
+                preferredRooms: ['bathroom', 'hallway', 'bedroom'],
+                weakness: 'holy_water',
+                moveSpeed: 2
+            },
+            lostChild: {
+                name: 'The Lost Child',
+                nameZh: '迷失的孩子',
+                image: 'https://pfst.cf2.poecdn.net/base/image/ad2b66555690713138e61116b08b50d35042a95b59781865082849b38efcbab0?w=1024&h=1536',
+                preferredRooms: ['attic', 'bedroom', 'hallway'],
+                weakness: 'talisman',
+                moveSpeed: 3
+            },
+            possessedBear: {
+                name: 'Possessed Teddy',
+                nameZh: '被附身的泰迪熊',
+                image: 'https://pfst.cf2.poecdn.net/base/image/331453b06386e4f97b3859693d9fba715cd250f72f2fab6780e5fa8c802c9f7d?w=1024&h=1536',
+                preferredRooms: ['bedroom', 'living_room'],
+                weakness: 'flashlight',
+                moveSpeed: 1,
+                eyePositions: { left: { x: '42%', y: '28%' }, right: { x: '58%', y: '28%' } }
+            },
+            possessedBunny: {
+                name: 'Possessed Bunny',
+                nameZh: '被附身的兔子',
+                image: 'https://pfst.cf2.poecdn.net/base/image/43180f04cf3c519cea98481d2465cf185c4bb43c5df0e085384b6a72fc0abed6?w=1024&h=1536',
+                preferredRooms: ['living_room', 'hallway'],
+                weakness: 'flashlight',
+                moveSpeed: 1,
+                eyePositions: { left: { x: '44%', y: '25%' }, right: { x: '56%', y: '25%' } }
+            }
+        };
+
+        const Items = {
+            flashlight_battery: {
+                name: 'Battery',
+                icon: '🔋',
+                useEffect: () => {
+                    GameState.batteries++;
+                    updateHUD();
+                    addMessage(t('foundBattery'), 'info');
+                }
+            },
+            holy_water: {
+                name: 'Holy Water',
+                icon: '💧',
+                useEffect: () => {
+                    GameState.holyWater++;
+                    updateHUD();
+                    addMessage(t('foundHolyWater'), 'info');
+                }
+            },
+            talisman: {
+                name: 'Protective Talisman',
+                icon: '🛡️',
+                useEffect: () => {
+                    GameState.talismans++;
+                    updateHUD();
+                    addMessage(t('foundTalisman'), 'info');
+                }
+            },
+            ancient_diary: {
+                name: 'Ancient Diary',
+                icon: '📔',
+                useEffect: () => {
+                    const text = currentLang === 'zh'
+                        ? '1952年3月15日... 孩子们在玩那些被诅咒的玩具后失踪了。玛格丽特从那以后就没停止哭泣。这房子...现在活过来了。如果你在读这个，你必须找到阁楼里的护身符。这是唯一的办法。'
+                        : 'March 15, 1952... The children went missing after playing with those cursed toys. Margaret hasn\'t stopped crying since. The house... it\'s alive now. If you\'re reading this, you must find the protective charm in the attic. It\'s the only way.';
+                    showEvent({
+                        title: currentLang === 'zh' ? '古老的日记' : 'Ancient Diary',
+                        text: text,
+                        choices: [{ text: currentLang === 'zh' ? '关闭日记' : 'Close diary', action: closeEvent }]
+                    });
+                }
+            },
+            protective_charm: {
+                name: 'Protective Charm',
+                icon: '✨',
+                useEffect: () => {
+                    GameState.inventory.push('protective_charm');
+                    addMessage(t('charmGlows'), 'info');
+                    Object.keys(GameState.ghosts).forEach(g => {
+                        GameState.ghosts[g].aggression = Math.max(0, GameState.ghosts[g].aggression - 30);
+                    });
+                }
+            },
+            old_photo: {
+                name: 'Old Photograph',
+                icon: '📷',
+                useEffect: () => {
+                    const text = currentLang === 'zh'
+                        ? '一家人站在这栋房子前。一位母亲、父亲和两个孩子——一个男孩和一个女孩。孩子们抱着毛绒玩具...一只泰迪熊和一只兔子。它们的眼睛似乎在跟着你。'
+                        : 'A family stands in front of this very house. A mother, father, and two children - a boy and a girl. The children are holding stuffed toys... a teddy bear and a bunny. Their eyes seem to follow you.';
+                    showEvent({
+                        title: currentLang === 'zh' ? '老照片' : 'Old Photograph',
+                        text: text,
+                        choices: [{ text: currentLang === 'zh' ? '放回去' : 'Put it back', action: closeEvent }]
+                    });
+                }
+            }
+        };
+
+        let gameInterval;
+        let ghostInterval;
+
+        function startGame() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+
+            // Initialize and start sound
+            SoundSystem.init();
+            SoundSystem.startAmbient();
+
+            updateRoomView();
+            updateHUD();
+            startGameLoop();
+            startGhostAI();
+
+            addMessage(t('homeAlone'), 'info');
+            addMessage(t('nightBegun'), 'warning');
+
+            // Play creepy creak sound on game start
+            setTimeout(() => SoundSystem.playCreak(), 1000);
+
+            setTimeout(() => {
+                if (Math.random() > 0.5) {
+                    triggerRandomEvent();
+                }
+            }, 5000);
+        }
+
+        function showTutorial() {
+            const tutorialHTML = `
+                <div class="tutorial-section">
+                    <h3>${t('tutorialObjective')}</h3>
+                    <p>${t('tutorialObjectiveText')}</p>
+                </div>
+                <div class="tutorial-section">
+                    <h3>${t('tutorialStats')}</h3>
+                    <p>${t('tutorialPower')}</p>
+                    <p>${t('tutorialSanity')}</p>
+                    <p>${t('tutorialHealth')}</p>
+                </div>
+                <div class="tutorial-section">
+                    <h3>${t('tutorialActions')}</h3>
+                    <p>${t('tutorialFlashlight')}</p>
+                    <p>${t('tutorialCameras')}</p>
+                    <p>${t('tutorialHide')}</p>
+                    <p>${t('tutorialInteract')}</p>
+                </div>
+                <div class="tutorial-section">
+                    <h3>${t('tutorialGhosts')}</h3>
+                    <p>${t('tutorialWeepingWoman')}</p>
+                    <p>${t('tutorialLostChild')}</p>
+                    <p>${t('tutorialPossessedToys')}</p>
+                </div>
+                <div class="tutorial-section">
+                    <h3>${t('tutorialControls')}</h3>
+                    <p>${t('tutorialControlsList')}</p>
+                </div>
+                <div class="tutorial-section">
+                    <h3>${t('tutorialTips')}</h3>
+                    <p>${t('tutorialTip1')}</p>
+                    <p>${t('tutorialTip2')}</p>
+                    <p>${t('tutorialTip3')}</p>
+                    <p>${t('tutorialTip4')}</p>
+                </div>
+            `;
+
+            GameState.isPaused = true;
+            const modal = document.getElementById('event-modal');
+            document.getElementById('event-title').textContent = t('tutorialTitle');
+            document.getElementById('event-text').innerHTML = tutorialHTML;
+
+            const choicesContainer = document.getElementById('event-choices');
+            choicesContainer.innerHTML = '';
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.textContent = t('understood');
+            btn.onclick = closeEvent;
+            choicesContainer.appendChild(btn);
+
+            modal.style.display = 'flex';
+        }
+
+        function startGameLoop() {
+            gameInterval = setInterval(() => {
+                if (GameState.isPaused || GameState.isInQTE) return;
+
+                GameState.gameMinutes += 2;
+                if (GameState.gameMinutes >= 60) {
+                    GameState.gameMinutes = 0;
+                    GameState.currentHour++;
+                    hourlyEvent();
+                }
+
+                if (GameState.currentHour >= 6) {
+                    victory();
+                    return;
+                }
+
+                if (GameState.isFlashlightOn) GameState.power -= 0.3;
+                if (GameState.isCameraOpen) GameState.power -= 0.2;
+
+                if (!isGhostInRoom() && !GameState.isHiding) {
+                    GameState.sanity = Math.min(100, GameState.sanity + 0.1);
+                }
+
+                if (Math.random() < 0.01) {
+                    triggerRandomEvent();
+                }
+
+                updateToyStates();
+                updateTimeDisplay();
+                updateHUD();
+                checkGameOver();
+
+            }, GameState.timeSpeed);
+        }
+
+        function hourlyEvent() {
+            const hour = GameState.currentHour;
+            const night = GameState.nightNumber;
+            addMessage(`${hour === 0 ? '12' : hour} AM...`, 'warning');
+
+            // Aggression increases more on later nights
+            const aggressionIncrease = (3 + night * 2) + (hour * (1 + night * 0.5));
+            Object.keys(GameState.ghosts).forEach(ghost => {
+                GameState.ghosts[ghost].aggression += aggressionIncrease;
+            });
+
+            // Ghost activation based on night number - Night 1 is easier
+            // Night 1: Only possessed toys at hour 3, weeping woman at hour 4
+            // Night 2: Possessed toys at hour 2, weeping woman at hour 3, child at hour 5
+            // Night 3+: All ghosts activate earlier
+            const activationOffset = Math.max(0, 3 - night); // Night 1 = 2 hour delay, Night 3+ = 0
+
+            if (hour >= Math.max(1, 3 - night)) GameState.ghosts.possessedBear.active = true;
+            if (hour >= Math.max(1, 3 - night)) GameState.ghosts.possessedBunny.active = true;
+            if (hour >= Math.max(1, 4 - night)) GameState.ghosts.weepingWoman.active = true;
+            if (hour >= Math.max(2, 5 - night)) GameState.ghosts.lostChild.active = true;
+        }
+
+        function startGhostAI() {
+            // Ghost AI checks more frequently on later nights
+            const aiInterval = Math.max(2000, 5000 - (GameState.nightNumber - 1) * 500);
+
+            ghostInterval = setInterval(() => {
+                if (GameState.isPaused || GameState.isInQTE || GameState.isHiding) return;
+
+                Object.keys(GameState.ghosts).forEach(ghostKey => {
+                    const ghost = GameState.ghosts[ghostKey];
+                    if (!ghost.active) return;
+
+                    const ghostData = Ghosts[ghostKey];
+
+                    // Movement chance scales with night number
+                    const nightMultiplier = 0.5 + (GameState.nightNumber * 0.25);
+                    if (Math.random() < (ghost.aggression / 100) * (ghostData.moveSpeed / 3) * nightMultiplier) {
+                        moveGhost(ghostKey);
+                    }
+
+                    if (ghost.room === GameState.currentRoom) {
+                        handleGhostEncounter(ghostKey);
+                    }
+                });
+
+            }, aiInterval);
+        }
+
+        function moveGhost(ghostKey) {
+            const ghost = GameState.ghosts[ghostKey];
+            const ghostData = Ghosts[ghostKey];
+            const currentRoom = Rooms[ghost.room];
+
+            const possibleMoves = Object.values(currentRoom.connections);
+
+            let targetRoom;
+            if (Math.random() < 0.4) {
+                targetRoom = findPathToPlayer(ghost.room);
+            } else {
+                const preferred = ghostData.preferredRooms.filter(r => possibleMoves.includes(r));
+                targetRoom = preferred.length > 0
+                    ? preferred[Math.floor(Math.random() * preferred.length)]
+                    : possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+            }
+
+            if (targetRoom) {
+                ghost.room = targetRoom;
+            }
+        }
+
+        function findPathToPlayer(fromRoom) {
+            const connections = Rooms[fromRoom].connections;
+            const options = Object.values(connections);
+
+            if (options.includes(GameState.currentRoom)) {
+                return GameState.currentRoom;
+            }
+
+            return options[Math.floor(Math.random() * options.length)];
+        }
+
+        function handleGhostEncounter(ghostKey) {
+            const ghostData = Ghosts[ghostKey];
+            const ghost = GameState.ghosts[ghostKey];
+
+            showGhost(ghostKey);
+            GameState.sanity -= 5;
+
+            // Play whisper sound when ghost appears
+            SoundSystem.playWhisper();
+
+            // Start heartbeat and accelerate based on ghost aggression
+            const dangerLevel = Math.min(150, 70 + ghost.aggression * 0.5);
+            SoundSystem.accelerateHeartbeat(dangerLevel);
+
+            if (ghostData.weakness === 'flashlight' && GameState.isFlashlightOn) {
+                repelGhost(ghostKey, t('lightDrivesAway'));
+                // Calm down heartbeat when ghost is repelled
+                SoundSystem.calmHeartbeat();
+                setTimeout(() => SoundSystem.stopHeartbeat(), 3000);
+                return;
+            }
+
+            if (!GameState.isInQTE && Math.random() < 0.5) {
+                triggerGhostAttack(ghostKey);
+            } else {
+                // Calm heartbeat after a few seconds if no attack
+                setTimeout(() => {
+                    SoundSystem.calmHeartbeat();
+                    setTimeout(() => SoundSystem.stopHeartbeat(), 4000);
+                }, 2000);
+            }
+        }
+
+        function triggerGhostAttack(ghostKey) {
+            const ghostData = Ghosts[ghostKey];
+            const ghostName = currentLang === 'zh' ? ghostData.nameZh : ghostData.name;
+
+            // JUMP SCARE SOUND!
+            SoundSystem.playJumpScare();
+
+            // Heartbeat goes to maximum panic level!
+            SoundSystem.accelerateHeartbeat(160);
+
+            showEvent({
+                title: `${ghostName} ${t('attacks')}`,
+                text: t('comingForYou'),
+                choices: [
+                    { text: t('hideChoice'), action: () => { hideFromGhost(ghostKey); } },
+                    { text: t('useItem'), action: () => { useItemAgainstGhost(ghostKey); } },
+                    { text: t('runChoice'), action: () => { startQTE(['←', '→', '↑', '↓'], () => runSuccess(ghostKey), runFail); } }
+                ]
+            });
+        }
+
+        function showGhost(ghostKey) {
+            const ghostData = Ghosts[ghostKey];
+            const ghostImg = document.getElementById('ghost-image');
+
+            if (ghostKey === 'weepingWoman' && Math.random() > 0.5) {
+                ghostImg.src = ghostData.crouchImage;
+            } else {
+                ghostImg.src = ghostData.image;
+            }
+
+            ghostImg.classList.add('visible');
+
+            if (ghostKey === 'possessedBear' || ghostKey === 'possessedBunny') {
+                showPossessedEyes(ghostData.eyePositions);
+            }
+
+            setTimeout(() => {
+                if (!GameState.isInQTE) {
+                    ghostImg.classList.remove('visible', 'attacking');
+                    document.getElementById('possessed-eyes').classList.remove('active');
+                }
+            }, 3000);
+        }
+
+        function showPossessedEyes(positions) {
+            const eyesContainer = document.getElementById('possessed-eyes');
+            const eye1 = document.getElementById('eye1');
+            const eye2 = document.getElementById('eye2');
+
+            eye1.style.left = positions.left.x;
+            eye1.style.top = positions.left.y;
+            eye2.style.left = positions.right.x;
+            eye2.style.top = positions.right.y;
+
+            eyesContainer.classList.add('active');
+        }
+
+        function updateToyStates() {
+            const bearEl = document.getElementById('bedroom-bear');
+            const bunnyEl = document.getElementById('living-room-bunny');
+
+            // Show toys in their rooms
+            bearEl.style.display = GameState.currentRoom === 'bedroom' ? 'block' : 'none';
+            bunnyEl.style.display = GameState.currentRoom === 'living_room' ? 'block' : 'none';
+
+            // Possessed state - toys glow red when their ghost is active (regardless of ghost location)
+            // Flashlight can temporarily dispel the effect
+            const bearPossessed = GameState.ghosts.possessedBear.active && !GameState.isFlashlightOn;
+            const bunnyPossessed = GameState.ghosts.possessedBunny.active && !GameState.isFlashlightOn;
+
+            bearEl.classList.toggle('possessed', bearPossessed);
+            bunnyEl.classList.toggle('possessed', bunnyPossessed);
+        }
+
+        function repelGhost(ghostKey, message) {
+            const ghost = GameState.ghosts[ghostKey];
+
+            const roomConnections = Object.values(Rooms[ghost.room].connections);
+            ghost.room = roomConnections[Math.floor(Math.random() * roomConnections.length)] || 'basement';
+            ghost.aggression = Math.max(0, ghost.aggression - 20);
+
+            document.getElementById('ghost-image').classList.remove('visible', 'attacking');
+            document.getElementById('possessed-eyes').classList.remove('active');
+
+            GameState.ghostsRepelled++;
+            addMessage(message, 'info');
+            closeEvent();
+        }
+
+        function hideFromGhost(ghostKey) {
+            closeEvent();
+            hideAction();
+
+            setTimeout(() => {
+                const ghost = GameState.ghosts[ghostKey];
+                if (Math.random() < 0.3) {
+                    GameState.isHiding = false;
+                    document.getElementById('hide-overlay').style.display = 'none';
+                    GameState.health -= 25;
+                    GameState.sanity -= 15;
+                    addMessage(t('itFoundYou'), 'danger');
+                    showGhost(ghostKey);
+                    document.getElementById('ghost-image').classList.add('attacking');
+                } else {
+                    addMessage(t('passedBy'), 'info');
+                    ghost.room = Object.values(Rooms[ghost.room].connections)[0] || 'hallway';
+                }
+            }, 3000);
+        }
+
+        function useItemAgainstGhost(ghostKey) {
+            const ghostData = Ghosts[ghostKey];
+            closeEvent();
+
+            if (ghostData.weakness === 'holy_water' && GameState.holyWater > 0) {
+                GameState.holyWater--;
+                repelGhost(ghostKey, t('holyWaterBurns'));
+            } else if (ghostData.weakness === 'talisman' && GameState.talismans > 0) {
+                GameState.talismans--;
+                repelGhost(ghostKey, t('talismanGlows'));
+            } else if (ghostData.weakness === 'flashlight' && GameState.batteries > 0) {
+                GameState.isFlashlightOn = true;
+                repelGhost(ghostKey, t('brightLight'));
+            } else {
+                addMessage(t('noRightItem'), 'danger');
+                GameState.health -= 20;
+            }
+
+            updateHUD();
+        }
+
+        function runSuccess() {
+            const availableRooms = Object.values(Rooms[GameState.currentRoom].connections);
+            GameState.currentRoom = availableRooms[Math.floor(Math.random() * availableRooms.length)];
+            updateRoomView();
+            addMessage(t('escaped'), 'info');
+            document.getElementById('ghost-image').classList.remove('visible', 'attacking');
+        }
+
+        function runFail() {
+            GameState.health -= 30;
+            GameState.sanity -= 20;
+            addMessage(t('caughtYou'), 'danger');
+        }
+
+        function isGhostInRoom() {
+            return Object.values(GameState.ghosts).some(g => g.room === GameState.currentRoom && g.active);
+        }
+
+        function navigate(direction) {
+            const currentRoom = Rooms[GameState.currentRoom];
+            const targetRoom = currentRoom.connections[direction];
+
+            if (targetRoom) {
+                GameState.currentRoom = targetRoom;
+                updateRoomView();
+
+                // Play footstep sound when moving
+                SoundSystem.playFootstep();
+
+                if (isGhostInRoom()) {
+                    const ghostInRoom = Object.keys(GameState.ghosts).find(
+                        g => GameState.ghosts[g].room === GameState.currentRoom && GameState.ghosts[g].active
+                    );
+                    if (ghostInRoom) {
+                        setTimeout(() => handleGhostEncounter(ghostInRoom), 500);
+                    }
+                }
+            }
+        }
+
+        function updateRoomView() {
+            const room = Rooms[GameState.currentRoom];
+            const roomImg = document.getElementById('room-image');
+            const roomInfo = document.getElementById('room-info');
+            const roomView = document.getElementById('room-view');
+
+            roomImg.src = room.image;
+            roomInfo.textContent = t(room.nameKey);
+
+            const directions = ['left', 'up', 'down', 'right'];
+            directions.forEach(dir => {
+                const btn = document.getElementById(`nav-${dir}`);
+                btn.disabled = !room.connections[dir];
+            });
+
+            if (GameState.power < 20 && !GameState.isFlashlightOn) {
+                roomView.classList.add('dark');
+            } else {
+                roomView.classList.remove('dark');
+            }
+
+            document.getElementById('ghost-image').classList.remove('visible', 'attacking');
+            document.getElementById('possessed-eyes').classList.remove('active');
+
+            updateToyStates();
+        }
+
+        function toggleFlashlight() {
+            const btn = document.getElementById('btn-flashlight');
+            const roomView = document.getElementById('room-view');
+
+            if (GameState.isFlashlightOn) {
+                GameState.isFlashlightOn = false;
+                btn.classList.remove('active');
+                roomView.classList.remove('flashlight');
+            } else {
+                if (GameState.batteries > 0 || GameState.power > 0) {
+                    GameState.isFlashlightOn = true;
+                    btn.classList.add('active');
+                    roomView.classList.add('flashlight');
+
+                    document.addEventListener('mousemove', updateFlashlightPosition);
+                    document.addEventListener('touchmove', updateFlashlightTouch);
+
+                    addMessage(t('flashlightOn'), 'info');
+                } else {
+                    addMessage(t('noBatteries'), 'warning');
+                }
+            }
+            updateToyStates();
+        }
+
+        function updateFlashlightPosition(e) {
+            if (!GameState.isFlashlightOn) return;
+            const overlay = document.getElementById('flashlight-overlay');
+            const rect = overlay.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            overlay.style.setProperty('--x', `${x}%`);
+            overlay.style.setProperty('--y', `${y}%`);
+        }
+
+        function updateFlashlightTouch(e) {
+            if (!GameState.isFlashlightOn) return;
+            const touch = e.touches[0];
+            const overlay = document.getElementById('flashlight-overlay');
+            const rect = overlay.getBoundingClientRect();
+            const x = ((touch.clientX - rect.left) / rect.width) * 100;
+            const y = ((touch.clientY - rect.top) / rect.height) * 100;
+            overlay.style.setProperty('--x', `${x}%`);
+            overlay.style.setProperty('--y', `${y}%`);
+        }
+
+        function openCameras() {
+            if (GameState.power < 5) {
+                addMessage(t('noPowerCameras'), 'warning');
+                return;
+            }
+
+            GameState.isCameraOpen = true;
+            document.getElementById('camera-view').style.display = 'block';
+
+            const grid = document.getElementById('camera-grid');
+            grid.innerHTML = '';
+
+            Object.keys(Rooms).forEach(roomKey => {
+                const room = Rooms[roomKey];
+                const hasGhost = Object.values(GameState.ghosts).some(g => g.room === roomKey && g.active);
+
+                const feed = document.createElement('div');
+                feed.className = `camera-feed ${hasGhost ? 'has-ghost' : ''}`;
+                feed.innerHTML = `
+                    <img src="${room.image}" alt="${t(room.nameKey)}">
+                    <div class="camera-label">${t(room.nameKey)}</div>
+                    <div class="camera-ghost-indicator"></div>
+                `;
+                feed.onclick = () => {
+                    GameState.currentRoom = roomKey;
+                    closeCameras();
+                    updateRoomView();
+                };
+                grid.appendChild(feed);
+            });
+
+            addMessage(t('camerasActive'), 'warning');
+        }
+
+        function closeCameras() {
+            GameState.isCameraOpen = false;
+            document.getElementById('camera-view').style.display = 'none';
+        }
+
+        function hideAction() {
+            if (GameState.isHiding) {
+                GameState.isHiding = false;
+                document.getElementById('hide-overlay').style.display = 'none';
+                addMessage(t('emergHiding'), 'info');
+                return;
+            }
+
+            const room = Rooms[GameState.currentRoom];
+            GameState.isHiding = true;
+            GameState.timesHidden++;
+
+            const hideSpots = {
+                underBed: currentLang === 'zh' ? '床底下' : 'under the bed',
+                behindCouch: currentLang === 'zh' ? '沙发后面' : 'behind the couch',
+                inPantry: currentLang === 'zh' ? '储物柜里' : 'inside the pantry',
+                inCloset: currentLang === 'zh' ? '衣柜里' : 'in the closet',
+                inBathtub: currentLang === 'zh' ? '浴缸里' : 'in the bathtub',
+                behindHeater: currentLang === 'zh' ? '热水器后面' : 'behind the water heater',
+                behindBoxes: currentLang === 'zh' ? '箱子后面' : 'behind the boxes'
+            };
+
+            const hideOverlay = document.getElementById('hide-overlay');
+            const hideSpot = hideSpots[room.hideSpotKey] || 'somewhere';
+            document.getElementById('hide-text').textContent = `${t('hidingSpot')} ${hideSpot}...`;
+            hideOverlay.style.display = 'flex';
+
+            addMessage(`${t('hidingSpot')} ${hideSpot}...`, 'info');
+
+            setTimeout(() => {
+                if (GameState.isHiding) {
+                    GameState.isHiding = false;
+                    hideOverlay.style.display = 'none';
+                    GameState.sanity -= 5;
+                    addMessage(t('cantHideForever'), 'warning');
+                }
+            }, 10000);
+        }
+
+        function toggleInventory() {
+            const panel = document.getElementById('inventory-panel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+            updateInventoryUI();
+        }
+
+        function updateInventoryUI() {
+            const grid = document.getElementById('inventory-grid');
+            grid.innerHTML = '';
+
+            const items = [
+                { icon: '🔋', count: GameState.batteries, name: 'Battery' },
+                { icon: '💧', count: GameState.holyWater, name: 'Holy Water' },
+                { icon: '🛡️', count: GameState.talismans, name: 'Talisman' }
+            ];
+
+            items.forEach(item => {
+                if (item.count > 0) {
+                    const slot = document.createElement('div');
+                    slot.className = 'inventory-slot';
+                    slot.innerHTML = `
+                        <span style="font-size: 2rem;">${item.icon}</span>
+                        <span class="item-count">x${item.count}</span>
+                    `;
+                    slot.title = item.name;
+                    grid.appendChild(slot);
+                }
+            });
+
+            GameState.inventory.forEach(itemKey => {
+                const item = Items[itemKey];
+                if (item) {
+                    const slot = document.createElement('div');
+                    slot.className = 'inventory-slot';
+                    slot.innerHTML = `<span style="font-size: 2rem;">${item.icon}</span>`;
+                    slot.title = item.name;
+                    slot.onclick = () => item.useEffect();
+                    grid.appendChild(slot);
+                }
+            });
+        }
+
+        function interactWithRoom() {
+            const room = Rooms[GameState.currentRoom];
+
+            if (room.items.length > 0 && !GameState.itemsFound.includes(`${GameState.currentRoom}_items`)) {
+                const foundItem = room.items[Math.floor(Math.random() * room.items.length)];
+                const itemData = Items[foundItem];
+
+                if (itemData) {
+                    GameState.itemsFound.push(`${GameState.currentRoom}_items`);
+                    itemData.useEffect();
+                }
+            } else if (Math.random() < 0.3) {
+                triggerRandomEvent();
+            } else {
+                addMessage(t('nothingHere'), 'info');
+            }
+        }
+
+        function triggerRandomEvent() {
+            const room = Rooms[GameState.currentRoom];
+            if (!room.events) return;
+
+            const availableEvents = room.events.filter(e => !GameState.eventsTriggered.includes(`${GameState.currentRoom}_${e}`));
+            if (availableEvents.length === 0) return;
+
+            const eventKey = availableEvents[Math.floor(Math.random() * availableEvents.length)];
+            GameState.eventsTriggered.push(`${GameState.currentRoom}_${eventKey}`);
+
+            // Simple events based on room
+            const events = {
+                strange_noise: {
+                    title: t('strangeNoise'),
+                    text: t('strangeNoiseText'),
+                    choices: [
+                        { text: t('checkUnderBed'), action: () => { checkUnderBed(); closeEvent(); } },
+                        { text: t('ignoreIt'), action: () => { GameState.sanity -= 5; closeEvent(); } }
+                    ]
+                },
+                bed_shake: {
+                    title: t('bedShakes'),
+                    text: t('bedShakesText'),
+                    choices: [
+                        { text: t('jumpOff'), action: () => { startQTE(['←', '→', '←'], bedShakeSuccess, bedShakeFail); } },
+                        { text: t('stayFrozen'), action: () => { GameState.health -= 15; GameState.sanity -= 10; closeEvent(); } }
+                    ]
+                },
+                tv_static: {
+                    title: t('tvStatic'),
+                    text: t('tvStaticText'),
+                    choices: [
+                        { text: t('turnOffTV'), action: () => { GameState.power -= 5; closeEvent(); } },
+                        { text: t('watchStatic'), action: () => { GameState.sanity -= 15; closeEvent(); } }
+                    ]
+                },
+                bunny_moves: {
+                    title: t('didItMove'),
+                    text: t('didItMoveText'),
+                    choices: [
+                        { text: t('shineFlashlight'), action: () => { toggleFlashlight(); closeEvent(); } },
+                        { text: t('backAway'), action: () => { GameState.ghosts.possessedBunny.aggression += 10; closeEvent(); } }
+                    ]
+                }
+            };
+
+            if (events[eventKey]) {
+                showEvent(events[eventKey]);
+            }
+        }
+
+        function showEvent(eventData) {
+            GameState.isPaused = true;
+
+            const modal = document.getElementById('event-modal');
+            document.getElementById('event-title').textContent = eventData.title;
+            document.getElementById('event-text').innerHTML = eventData.text;
+
+            const choicesContainer = document.getElementById('event-choices');
+            choicesContainer.innerHTML = '';
+
+            eventData.choices.forEach(choice => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.textContent = choice.text;
+                btn.onclick = choice.action;
+                choicesContainer.appendChild(btn);
+            });
+
+            modal.style.display = 'flex';
+        }
+
+        function closeEvent() {
+            document.getElementById('event-modal').style.display = 'none';
+            GameState.isPaused = false;
+        }
+
+        function checkUnderBed() {
+            if (Math.random() > 0.5) {
+                addMessage(currentLang === 'zh' ? '什么都没有...只有灰尘。' : 'Nothing there... just dust.', 'info');
+            } else {
+                GameState.sanity -= 10;
+                addMessage(currentLang === 'zh' ? '你看到一张苍白的脸在盯着你！' : 'You see a pale face staring back!', 'danger');
+                GameState.ghosts.weepingWoman.room = 'bedroom';
+                GameState.ghosts.weepingWoman.aggression += 20;
+            }
+        }
+
+        function bedShakeSuccess() {
+            addMessage(currentLang === 'zh' ? '你及时跳下了床！' : 'You jumped off just in time!', 'info');
+        }
+
+        function bedShakeFail() {
+            GameState.health -= 20;
+            GameState.sanity -= 15;
+            addMessage(currentLang === 'zh' ? '有什么东西抓住了你的腿！' : 'Something grabbed your leg!', 'danger');
+        }
+
+        function startQTE(keys, onSuccess, onFail) {
+            GameState.isInQTE = true;
+            closeEvent();
+
+            const overlay = document.getElementById('qte-overlay');
+            const keysContainer = document.getElementById('qte-keys');
+            const timerFill = document.getElementById('qte-timer-fill');
+            document.getElementById('qte-instruction').textContent = t('tapKeys');
+
+            overlay.style.display = 'flex';
+            keysContainer.innerHTML = '';
+
+            const keyElements = [];
+
+            keys.forEach((key, index) => {
+                const keyEl = document.createElement('div');
+                keyEl.className = 'qte-key';
+                keyEl.textContent = key;
+                keyEl.onclick = () => pressQTEKey(index);
+                keysContainer.appendChild(keyEl);
+                keyElements.push(keyEl);
+            });
+
+            keyElements[0].classList.add('active');
+
+            let timeLeft = 100;
+            timerFill.style.width = '100%';
+
+            const qteInterval = setInterval(() => {
+                timeLeft -= 2;
+                timerFill.style.width = `${timeLeft}%`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(qteInterval);
+                    endQTE(false, onFail);
+                }
+            }, 100);
+
+            window.currentQTE = {
+                keys,
+                keyElements,
+                currentIndex: 0,
+                interval: qteInterval,
+                onSuccess,
+                onFail
+            };
+        }
+
+        function pressQTEKey(index) {
+            const qte = window.currentQTE;
+            if (!qte || index !== qte.currentIndex) return;
+
+            qte.keyElements[index].classList.remove('active');
+            qte.keyElements[index].classList.add('success');
+
+            qte.currentIndex++;
+
+            if (qte.currentIndex >= qte.keys.length) {
+                clearInterval(qte.interval);
+                endQTE(true, qte.onSuccess);
+            } else {
+                qte.keyElements[qte.currentIndex].classList.add('active');
+            }
+        }
+
+        function endQTE(success, callback) {
+            GameState.isInQTE = false;
+            document.getElementById('qte-overlay').style.display = 'none';
+            window.currentQTE = null;
+
+            if (callback) callback();
+        }
+
+        function updateHUD() {
+            GameState.power = Math.max(0, Math.min(100, GameState.power));
+            GameState.sanity = Math.max(0, Math.min(100, GameState.sanity));
+            GameState.health = Math.max(0, Math.min(100, GameState.health));
+
+            const powerBar = document.getElementById('power-bar');
+            const sanityBar = document.getElementById('sanity-bar');
+            const healthBar = document.getElementById('health-bar');
+
+            powerBar.style.width = `${GameState.power}%`;
+            sanityBar.style.width = `${GameState.sanity}%`;
+            healthBar.style.width = `${GameState.health}%`;
+
+            if (GameState.power < 20) powerBar.classList.add('low');
+            else powerBar.classList.remove('low');
+
+            if (GameState.sanity < 30) sanityBar.classList.add('low');
+            else sanityBar.classList.remove('low');
+
+            if (GameState.health < 30) healthBar.classList.add('low');
+            else healthBar.classList.remove('low');
+
+            document.getElementById('power-text').textContent = `${Math.round(GameState.power)}%`;
+            document.getElementById('sanity-text').textContent = `${Math.round(GameState.sanity)}%`;
+            document.getElementById('health-text').textContent = `${Math.round(GameState.health)}%`;
+
+            document.getElementById('battery-count').textContent = GameState.batteries;
+            document.getElementById('holy-water-count').textContent = GameState.holyWater;
+            document.getElementById('talisman-count').textContent = GameState.talismans;
+        }
+
+        function updateTimeDisplay() {
+            const hour = GameState.currentHour;
+            const minutes = GameState.gameMinutes.toString().padStart(2, '0');
+            const displayHour = hour === 0 ? 12 : hour;
+
+            const timeDisplay = document.getElementById('time-display');
+            timeDisplay.textContent = `${displayHour}:${minutes} AM`;
+
+            if (hour >= 5) {
+                timeDisplay.classList.add('dawn');
+            }
+        }
+
+        function addMessage(text, type = 'info') {
+            const log = document.getElementById('message-log');
+            const msg = document.createElement('div');
+            msg.className = `log-message ${type}`;
+            msg.textContent = text;
+            log.appendChild(msg);
+
+            while (log.children.length > 5) {
+                log.removeChild(log.firstChild);
+            }
+
+            setTimeout(() => {
+                if (msg.parentNode) {
+                    msg.remove();
+                }
+            }, 5000);
+        }
+
+        function checkGameOver() {
+            if (GameState.health <= 0) {
+                gameOver('health');
+            } else if (GameState.sanity <= 0) {
+                gameOver('sanity');
+            }
+        }
+
+        function gameOver(reason) {
+            clearInterval(gameInterval);
+            clearInterval(ghostInterval);
+
+            const endScreen = document.getElementById('end-screen');
+            const endTitle = document.getElementById('end-title');
+            const endSubtitle = document.getElementById('end-subtitle');
+            const endStats = document.getElementById('end-stats');
+
+            endTitle.textContent = t('gameOver');
+            endTitle.className = 'end-title defeat';
+
+            endSubtitle.textContent = reason === 'health' ? t('healthDeath') : t('sanityDeath');
+
+            endStats.innerHTML = `
+                <p>${t('survivedUntil')}: ${GameState.currentHour === 0 ? '12' : GameState.currentHour}:${GameState.gameMinutes.toString().padStart(2, '0')} AM</p>
+                <p>${t('ghostsRepelled')}: ${GameState.ghostsRepelled}</p>
+                <p>${t('timesHidden')}: ${GameState.timesHidden}</p>
+            `;
+
+            endScreen.style.display = 'flex';
+        }
+
+        function victory() {
+            clearInterval(gameInterval);
+            clearInterval(ghostInterval);
+            SoundSystem.stopAmbient();
+            SoundSystem.stopHeartbeat();
+            SoundSystem.playVictory();
+
+            const endScreen = document.getElementById('end-screen');
+            const endTitle = document.getElementById('end-title');
+            const endSubtitle = document.getElementById('end-subtitle');
+            const endStats = document.getElementById('end-stats');
+
+            // Check if this is the final night (Night 5)
+            if (GameState.nightNumber >= 5) {
+                // Final victory!
+                endTitle.textContent = t('finalVictory');
+                endTitle.className = 'end-title victory';
+                endSubtitle.textContent = t('allNightsComplete');
+
+                endStats.innerHTML = `
+                    <p style="color: #FFD700; font-size: 1.2rem;">${t('perfectEnding')}</p>
+                    <p>${t('finalHealth')}: ${Math.round(GameState.health)}%</p>
+                    <p>${t('finalSanity')}: ${Math.round(GameState.sanity)}%</p>
+                    <p>${t('ghostsRepelled')}: ${GameState.ghostsRepelled}</p>
+                    <p>${t('timesHidden')}: ${GameState.timesHidden}</p>
+                    <p>${t('itemsFound')}: ${GameState.itemsFound.length}</p>
+                `;
+
+                // Only show Try Again button
+                const existingBtn = endScreen.querySelector('.next-night-btn');
+                if (existingBtn) existingBtn.remove();
+            } else {
+                // Night complete, can continue
+                endTitle.textContent = t('nightComplete');
+                endTitle.className = 'end-title victory';
+                endSubtitle.textContent = t('dawnBreaks');
+
+                let ending = t('normalEnding');
+                if (GameState.health > 80 && GameState.sanity > 80) {
+                    ending = t('perfectEnding');
+                } else if (GameState.inventory.includes('protective_charm')) {
+                    ending = t('trueEnding');
+                } else if (GameState.health < 30 || GameState.sanity < 30) {
+                    ending = t('narrowEscape');
+                }
+
+                endStats.innerHTML = `
+                    <p style="color: #FFD700; font-size: 1.2rem;">${ending}</p>
+                    <p>${t('finalHealth')}: ${Math.round(GameState.health)}%</p>
+                    <p>${t('finalSanity')}: ${Math.round(GameState.sanity)}%</p>
+                    <p>${t('ghostsRepelled')}: ${GameState.ghostsRepelled}</p>
+                    <p>${t('timesHidden')}: ${GameState.timesHidden}</p>
+                `;
+
+                // Add "Continue to Next Night" button
+                let nextBtn = endScreen.querySelector('.next-night-btn');
+                if (!nextBtn) {
+                    nextBtn = document.createElement('button');
+                    nextBtn.className = 'menu-btn next-night-btn';
+                    nextBtn.style.marginTop = '1rem';
+                    nextBtn.onclick = startNextNight;
+                    endScreen.querySelector('.end-stats').after(nextBtn);
+                }
+                nextBtn.textContent = t('continueNextNight');
+            }
+
+            endScreen.style.display = 'flex';
+        }
+
+        function startNextNight() {
+            GameState.nightNumber++;
+            GameState.currentHour = 0;
+            GameState.gameMinutes = 0;
+
+            // Partial recovery between nights (more recovery on easier nights)
+            const recoveryBonus = Math.max(0, 30 - (GameState.nightNumber * 5));
+            GameState.health = Math.min(100, GameState.health + 20 + recoveryBonus);
+            GameState.sanity = Math.min(100, GameState.sanity + 20 + recoveryBonus);
+            GameState.power = 100;
+
+            // Give some supplies
+            GameState.batteries = Math.max(2, 4 - GameState.nightNumber);
+            GameState.holyWater = 1;
+
+            // Reset ghost positions and states
+            GameState.ghosts.weepingWoman = { room: 'bathroom', active: false, aggression: GameState.nightNumber * 10 };
+            GameState.ghosts.lostChild = { room: 'attic', active: false, aggression: GameState.nightNumber * 10 };
+            GameState.ghosts.possessedBear = { room: 'bedroom', active: false, aggression: GameState.nightNumber * 10 };
+            GameState.ghosts.possessedBunny = { room: 'living_room', active: false, aggression: GameState.nightNumber * 10 };
+
+            GameState.currentRoom = 'bedroom';
+            GameState.isFlashlightOn = false;
+            GameState.isHiding = false;
+            GameState.isCameraOpen = false;
+            GameState.isInQTE = false;
+            GameState.isPaused = false;
+            GameState.eventsTriggered = [];
+
+            // Increase game speed slightly each night (time passes faster = harder)
+            GameState.timeSpeed = Math.max(600, 1000 - (GameState.nightNumber - 1) * 100);
+
+            // Update night display
+            document.getElementById('night-phase').textContent = t('night' + GameState.nightNumber);
+
+            // Hide end screen and restart
+            document.getElementById('end-screen').style.display = 'none';
+
+            SoundSystem.startAmbient();
+            updateRoomView();
+            updateHUD();
+            startGameLoop();
+            startGhostAI();
+
+            addMessage(`${t('night' + GameState.nightNumber)} ${currentLang === 'zh' ? '开始了...' : 'begins...'}`, 'warning');
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (GameState.isInQTE) {
+                const keyMap = {
+                    'ArrowLeft': '←',
+                    'ArrowRight': '→',
+                    'ArrowUp': '↑',
+                    'ArrowDown': '↓',
+                    ' ': '○'
+                };
+
+                const qte = window.currentQTE;
+                if (qte && keyMap[e.key] === qte.keys[qte.currentIndex]) {
+                    pressQTEKey(qte.currentIndex);
+                }
+                return;
+            }
+
+            switch(e.key) {
+                case 'ArrowLeft': navigate('left'); break;
+                case 'ArrowRight': navigate('right'); break;
+                case 'ArrowUp': navigate('up'); break;
+                case 'ArrowDown': navigate('down'); break;
+                case 'f': case 'F': toggleFlashlight(); break;
+                case 'c': case 'C': GameState.isCameraOpen ? closeCameras() : openCameras(); break;
+                case 'h': case 'H': hideAction(); break;
+                case 'i': case 'I': toggleInventory(); break;
+                case 'e': case 'E': interactWithRoom(); break;
+                case 'Escape':
+                    if (GameState.isCameraOpen) closeCameras();
+                    if (document.getElementById('inventory-panel').style.display === 'block') toggleInventory();
+                    break;
+            }
+        });
+
+        // Dark mode detection
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>
